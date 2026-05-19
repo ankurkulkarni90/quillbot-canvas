@@ -48,6 +48,47 @@ const DEFAULT = {
   author: "— QuillBot",
 };
 
+/* ═══════════════ INSTRUCTION STRIPPER ═══════════════ */
+const INTENT_PATTERNS = [
+  // "an x post with the text: ..." / "a linkedin post saying: ..."
+  /^(?:(?:create|make|write|draft|design|build|generate)\s+)?(?:me\s+)?(?:a|an)\s+(.+?)(?:\s+(?:with\s+(?:the\s+)?text|saying|that\s+says|with\s+content|reading|that\s+reads|about)\s*[:：]\s*)/i,
+  // "x post: ..." / "linkedin post: ..." / "quote card: ..."
+  /^(.+?)\s*[:：]\s*(?=\S)/i,
+];
+
+const TEMPLATE_HINTS = {
+  social: /\b(?:x\s+post|tweet|social\s+post|instagram|linkedin\s+post|linkedin|insta|ig\s+post|fb\s+post|facebook)\b/i,
+  slide: /\b(?:presentation|slide|deck|ppt|keynote)\b/i,
+  quote: /\b(?:quote|testimonial|quote\s+card)\b/i,
+  banner: /\b(?:banner|cover|header|hero)\b/i,
+};
+
+function stripInstruction(raw) {
+  if (!raw || !raw.trim()) return { content: raw, templateHint: null };
+  const text = raw.trim();
+
+  for (const pattern of INTENT_PATTERNS) {
+    const match = text.match(pattern);
+    if (match) {
+      const intentPart = match[1].trim().toLowerCase();
+      const contentStart = match[0].length;
+      const content = text.substring(contentStart).trim();
+
+      // Only strip if the remaining content is substantial
+      if (content.length > 20) {
+        // Detect template hint from the instruction
+        let templateHint = null;
+        for (const [tmpl, regex] of Object.entries(TEMPLATE_HINTS)) {
+          if (regex.test(intentPart)) { templateHint = tmpl; break; }
+        }
+        return { content, templateHint };
+      }
+    }
+  }
+
+  return { content: text, templateHint: null };
+}
+
 /* ═══════════════ CONTENT TYPE DETECTION ═══════════════ */
 const CONTENT_TYPES = {
   quote: { label: "Quote", template: "quote", confidence: 0, icon: "❝" },
@@ -402,7 +443,8 @@ export default function App() {
   // Screen 1: live detection as user types
   useEffect(() => {
     if (createText.trim()) {
-      setCreateDetected(detectContentType(createText));
+      const { content: stripped } = stripInstruction(createText);
+      setCreateDetected(detectContentType(stripped));
     } else {
       setCreateDetected(null);
     }
@@ -410,12 +452,15 @@ export default function App() {
 
   // Screen 1 → Screen 2 transition
   const handleCreate = useCallback(() => {
-    const detected = detectContentType(createText);
-    const parsed = parseText(createText, detected);
+    const { content: stripped, templateHint } = stripInstruction(createText);
+    const detected = detectContentType(stripped);
+    const parsed = parseText(stripped, detected);
     if (parsed) {
       setContent(prev => ({ ...prev, ...parsed }));
+      // Template: prefer explicit hint from instruction, else use detected
+      const finalTemplate = templateHint || (detected ? detected.template : "social");
+      setTemplateId(finalTemplate);
       if (detected) {
-        setTemplateId(detected.template);
         const recs = recommendStyle(detected, parsed);
         if (recs.length > 0) {
           setSuggestions(recs);
@@ -441,14 +486,14 @@ export default function App() {
   }, []);
 
   const handleSmartPaste = useCallback(() => {
-    const detected = detectContentType(pasteText);
-    const parsed = parseText(pasteText, detected);
+    const { content: stripped, templateHint } = stripInstruction(pasteText);
+    const detected = detectContentType(stripped);
+    const parsed = parseText(stripped, detected);
     if (parsed) {
       setContent(prev => ({ ...prev, ...parsed }));
-      // Auto-select template based on content type
+      const finalTemplate = templateHint || (detected ? detected.template : templateId);
+      setTemplateId(finalTemplate);
       if (detected) {
-        setTemplateId(detected.template);
-        // Generate style recommendations
         const recs = recommendStyle(detected, parsed);
         if (recs.length > 0) {
           setSuggestions(recs);
@@ -459,7 +504,7 @@ export default function App() {
       setPasteText("");
       setDetectedType(null);
     }
-  }, [pasteText]);
+  }, [pasteText, templateId]);
 
   const applySuggestion = useCallback((suggestion) => {
     if (suggestion.type === "font") setFontIdx(suggestion.value);
