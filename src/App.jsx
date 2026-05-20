@@ -992,7 +992,7 @@ export default function App() {
           </div>
 
           {/* ←←← ANALYTICS COMPONENT ADDED HERE */}
-          <Analytics />
+          <Analytics debug={false} />
         </div>
       </div>
     );
@@ -1316,7 +1316,7 @@ export default function App() {
         </div>
 
         {/* ←←← ANALYTICS COMPONENT ADDED HERE (mobile) */}
-        <Analytics />
+        <Analytics debug={false} />
       </div>
     );
   }
@@ -1486,7 +1486,7 @@ export default function App() {
         </div>
 
         {/* ←←← ANALYTICS COMPONENT ADDED HERE (desktop) */}
-        <Analytics />
+        <Analytics debug={false} />
       </div>
     </div>
   );
