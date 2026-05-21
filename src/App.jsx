@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { Analytics } from "@vercel/analytics/react";
 
 const GFONTS = "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:wght@400;600;700;900&family=Source+Sans+3:wght@400;600;700&family=Sora:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&family=Outfit:wght@400;500;600;700&family=Bebas+Neue&display=swap";
 
@@ -990,9 +989,6 @@ export default function App() {
               Built with <span style={{ color: "#E25555" }}>❤️</span> by <span style={{ fontWeight: 700, color: QB.textSecondary }}>Ankur Kulkarni</span> + <span style={{ fontWeight: 700, color: QB.textSecondary }}>Claude "Gerrard"</span>
             </div>
           </div>
-
-          {/* ←←← ANALYTICS COMPONENT ADDED HERE */}
-          <Analytics debug={false} />
         </div>
       </div>
     );
@@ -1314,9 +1310,6 @@ export default function App() {
             <DownloadIcon /> {downloading ? "…" : "Download"}
           </button>
         </div>
-
-        {/* ←←← ANALYTICS COMPONENT ADDED HERE (mobile) */}
-        <Analytics debug={false} />
       </div>
     );
   }
@@ -1484,9 +1477,6 @@ export default function App() {
             <span>Ready for: LinkedIn · Instagram · Slides · Email</span>
           </div>
         </div>
-
-        {/* ←←← ANALYTICS COMPONENT ADDED HERE (desktop) */}
-        <Analytics debug={false} />
       </div>
     </div>
   );
